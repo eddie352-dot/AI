@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>玩轉拉密：跨代腦力與數位共學 | 彰化社區大學</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts: Noto Sans TC 與 Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- 引入 FontAwesome 圖示庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        rummi: {
+                            red: '#DC2626',
+                            blue: '#2563EB',
+                            amber: '#D97706',
+                            dark: '#1E293B',
+                            paper: '#FAFAF8',
+                            card: '#FFFFFF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 全齡友善基礎樣式與字級切換控制 */
+        :root {
+            --base-font-scale: 1;
+        }
+        html {
+            font-size: calc(16px * var(--base-font-scale));
+            scroll-behavior: smooth;
+        }
+        html.large-text {
+            --base-font-scale: 1.18;
+        }
+        body {
+            background-color: #FAFAF8;
+            color: #1E293B;
+            line-height: 1.75;
+        }
+
+        /* 拉密實體數字牌磚質感設計 */
+        .rummi-tile {
+            box-shadow: 0 3px 0 #CBD5E1, 0 5px 10px rgba(30, 41, 59, 0.08);
+            border: 1px solid #E2E8F0;
+            background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+        }
+        .rummi-hero-tile {
+            box-shadow: 0 5px 0 rgba(15, 23, 42, 0.35), 0 10px 20px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            background: linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%);
+        }
+
+        /* 列印專用樣式優化 */
+        @media print {
+            body {
+                background-color: #FFFFFF !important;
+                font-size: 11pt !important;
+                line-height: 1.5 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-break-inside {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl {
+                box-shadow: none !important;
+                border: 1px solid #CBD5E1 !important;
+            }
+            header.hero-section {
+                background: #1E293B !important;
+                color: #FFFFFF !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                padding: 1.5rem !important;
+            }
+            /* 列印時強制顯示所有大綱並隱藏手機版卡片以免重複 */
+            #syllabus-desktop-table {
+                display: table !important;
+            }
+            #syllabus-mobile-cards {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-amber-200 selection:text-slate-900">
+
+    <!-- 頂部功能導覽列（支援字級放大與列印） -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm no-print">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+            <!-- 左側品牌識別與迷你拉密順子牌磚 -->
+            <div class="flex items-center gap-3">
+                <div class="flex -space-x-1" aria-hidden="true">
+                    <span class="rummi-tile w-6 h-7 rounded flex items-center justify-center font-extrabold text-xs text-rummi-red">1</span>
+                    <span class="rummi-tile w-6 h-7 rounded flex items-center justify-center font-extrabold text-xs text-rummi-blue">2</span>
+                    <span class="rummi-tile w-6 h-7 rounded flex items-center justify-center font-extrabold text-xs text-rummi-amber">3</span>
+                    <span class="rummi-tile w-6 h-7 rounded flex items-center justify-center font-extrabold text-xs text-rummi-dark">☺</span>
+                </div>
+                <span class="font-bold text-slate-800 text-sm sm:text-base tracking-wide">彰化社區大學</span>
+            </div>
+
+            <!-- 右側無障礙與實用工具按鈕 -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button id="fontToggleBtn" type="button" onclick="toggleFontSize()" 
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-bold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 active:scale-95 transition cursor-pointer"
+                    aria-label="切換文字大小">
+                    <i class="fa-solid fa-text-height text-rummi-amber"></i>
+                    <span id="fontToggleText">字體：標準</span>
+                </button>
+
+                <button type="button" onclick="window.print()" 
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-rummi-dark text-white hover:bg-slate-800 active:scale-95 transition shadow-sm cursor-pointer"
+                    aria-label="列印或儲存為PDF">
+                    <i class="fa-solid fa-print"></i>
+                    <span class="hidden sm:inline">列印 / 存PDF</span>
+                    <span class="sm:hidden">列印</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 1. 標題區（Hero Section） -->
+    <header class="hero-section relative overflow-hidden bg-gradient-to-br from-slate-900 via-rummi-dark to-blue-950 text-white pt-10 pb-16 sm:pt-16 sm:pb-20 px-4 sm:px-6 lg:px-8">
+        <!-- 背景與右側實體拉密牌磚裝飾（1、2、3、7、13 與笑臉百搭牌） -->
+        <div class="max-w-5xl mx-auto relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            <div class="text-center lg:text-left max-w-2xl mx-auto lg:mx-0">
+                <!-- 單位標籤 -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 text-amber-300 font-bold text-sm sm:text-base mb-4">
+                    <i class="fa-solid fa-school"></i>
+                    <span>彰化社區大學</span>
+                </div>
+
+                <!-- 課程名稱 -->
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight mb-4">
+                    玩轉拉密：<span class="text-amber-400">跨代腦力與數位共學</span>
+                </h1>
+
+                <!-- 完整副標題 -->
+                <p class="text-base sm:text-xl font-bold text-blue-100 leading-relaxed mb-6">
+                    彰化社區大學 18週跨世代桌遊與數位共學課程，適合20至80歲全齡學員
+                </p>
+
+                <!-- 亮點核心標籤 -->
+                <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 text-sm font-bold">
+                    <span class="px-3.5 py-1.5 rounded-xl bg-rummi-red text-white shadow-sm">
+                        <i class="fa-solid fa-heart mr-1.5"></i>社會情緒學習（SEL）
+                    </span>
+                    <span class="px-3.5 py-1.5 rounded-xl bg-rummi-blue text-white shadow-sm">
+                        <i class="fa-solid fa-mobile-screen-button mr-1.5"></i>數位資訊素養
+                    </span>
+                    <span class="px-3.5 py-1.5 rounded-xl bg-rummi-amber text-white shadow-sm">
+                        <i class="fa-solid fa-people-arrows mr-1.5"></i>20－80歲跨代共融
+                    </span>
+                </div>
+            </div>
+
+            <!-- 實體感拉密牌架裝飾展示組 -->
+            <div class="flex flex-col items-center justify-center shrink-0 select-none" aria-hidden="true">
+                <div class="flex items-end gap-2 sm:gap-2.5 p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl">
+                    <!-- 順子 1, 2, 3 -->
+                    <div class="rummi-hero-tile w-11 h-14 sm:w-12 sm:h-16 rounded-xl flex flex-col items-center justify-center -rotate-3">
+                        <span class="text-rummi-red font-black text-xl sm:text-2xl leading-none">1</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-rummi-red/40 mt-1"></span>
+                    </div>
+                    <div class="rummi-hero-tile w-11 h-14 sm:w-12 sm:h-16 rounded-xl flex flex-col items-center justify-center translate-y-0.5">
+                        <span class="text-rummi-blue font-black text-xl sm:text-2xl leading-none">2</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-rummi-blue/40 mt-1"></span>
+                    </div>
+                    <div class="rummi-hero-tile w-11 h-14 sm:w-12 sm:h-16 rounded-xl flex flex-col items-center justify-center rotate-2">
+                        <span class="text-rummi-amber font-black text-xl sm:text-2xl leading-none">3</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-rummi-amber/40 mt-1"></span>
+                    </div>
+                    <!-- 幸運 7 與大牌 13 -->
+                    <div class="rummi-hero-tile w-11 h-14 sm:w-12 sm:h-16 rounded-xl flex flex-col items-center justify-center -rotate-2">
+                        <span class="text-rummi-dark font-black text-xl sm:text-2xl leading-none">7</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-rummi-dark/40 mt-1"></span>
+                    </div>
+                    <div class="rummi-hero-tile w-11 h-14 sm:w-12 sm:h-16 rounded-xl flex flex-col items-center justify-center rotate-3">
+                        <span class="text-rummi-red font-black text-xl sm:text-2xl leading-none">13</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-rummi-red/40 mt-1"></span>
+                    </div>
+                    <!-- 笑臉百搭牌 -->
+                    <div class="rummi-hero-tile w-11 h-14 sm:w-12 sm:h-16 rounded-xl flex flex-col items-center justify-center -rotate-3 ring-2 ring-amber-400">
+                        <span class="text-rummi-amber font-black text-xl sm:text-2xl leading-none">☺</span>
+                        <span class="text-[9px] font-extrabold text-slate-400 mt-0.5">JOKER</span>
+                    </div>
+                </div>
+                <!-- 拉密經典四色裝飾條 -->
+                <div class="grid grid-cols-4 gap-2 w-48 mt-3">
+                    <div class="h-1.5 rounded-full bg-rummi-red"></div>
+                    <div class="h-1.5 rounded-full bg-rummi-blue"></div>
+                    <div class="h-1.5 rounded-full bg-rummi-amber"></div>
+                    <div class="h-1.5 rounded-full bg-slate-300"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要內容區 -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 pb-20 space-y-10 sm:space-y-12 relative z-20">
+
+        <!-- 2. 課程核心資訊區塊（卡片式排版） -->
+        <section aria-labelledby="core-info-heading" class="space-y-6">
+            <h2 id="core-info-heading" class="sr-only">課程核心資訊</h2>
+
+            <!-- 課程理念（全寬重點卡片） -->
+            <article class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border-t-4 border-rummi-red print-break-inside">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="rummi-tile w-11 h-12 rounded-xl flex items-center justify-center text-rummi-red font-black text-xl shrink-0">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </span>
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-rummi-red">Course Philosophy</span>
+                        <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900">課程理念</h3>
+                    </div>
+                </div>
+                <p class="text-slate-800 text-base sm:text-lg font-medium leading-relaxed bg-red-50/60 p-4 sm:p-5 rounded-2xl border border-red-100">
+                    透過拉密桌遊結合社會情緒覺察與數位資訊素養，打破年齡隔閡。讓學員在趣味對弈中活化大腦、學會情緒管理，並善用數位工具提升生活科技力，達成跨世代共融與快樂終身學習。
+                </p>
+            </article>
+
+            <!-- 課程目標（五維度結構化卡片） -->
+            <article class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border-t-4 border-rummi-blue print-break-inside">
+                <div class="flex items-center gap-3 mb-5">
+                    <span class="rummi-tile w-11 h-12 rounded-xl flex items-center justify-center text-rummi-blue font-black text-xl shrink-0">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </span>
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-rummi-blue">Course Objectives</span>
+                        <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900">課程目標</h3>
+                    </div>
+                </div>
+
+                <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <li class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
+                        <span class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-900 font-bold text-sm shrink-0 mt-0.5">緣由</span>
+                        <span class="text-slate-700 font-medium">順應高齡化與數位時代，以跨世代桌遊促進代間交流。</span>
+                    </li>
+                    <li class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
+                        <span class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-900 font-bold text-sm shrink-0 mt-0.5">知識與理論</span>
+                        <span class="text-slate-700 font-medium">掌握拉密規則、排列組合邏輯及數位媒體識讀基礎。</span>
+                    </li>
+                    <li class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
+                        <span class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-900 font-bold text-sm shrink-0 mt-0.5">技能</span>
+                        <span class="text-slate-700 font-medium">提升策略思考、線上對戰操作與數位防詐查證能力。</span>
+                    </li>
+                    <li class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
+                        <span class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-900 font-bold text-sm shrink-0 mt-0.5">品德與態度</span>
+                        <span class="text-slate-700 font-medium">培養情緒覺察、挫折容忍及尊重對手的運動家精神。</span>
+                    </li>
+                    <li class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-start gap-3 md:col-span-2">
+                        <span class="px-2.5 py-1 rounded-lg bg-amber-200 text-amber-950 font-bold text-sm shrink-0 mt-0.5">社會連結</span>
+                        <span class="text-slate-800 font-medium">建立共學社群，將桌遊與科技帶入彰化在地社區關懷據點。</span>
+                    </li>
+                </ul>
+            </article>
+
+            <!-- 條件限制 & 授課方式（雙欄並排） -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 條件限制 -->
+                <article class="bg-white rounded-3xl p-6 sm:p-7 shadow-md border-t-4 border-rummi-amber flex flex-col justify-between print-break-inside">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="rummi-tile w-11 h-12 rounded-xl flex items-center justify-center text-rummi-amber font-black text-xl shrink-0">
+                                <i class="fa-solid fa-user-check"></i>
+                            </span>
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-rummi-amber">Prerequisites</span>
+                                <h3 class="text-xl font-extrabold text-slate-900">條件限制</h3>
+                            </div>
+                        </div>
+                        <p class="text-slate-700 leading-relaxed">
+                            本課程為初階入門設計，無需任何桌遊或資訊基礎，歡迎20至80歲對益智遊戲、人際互動及數位學習有興趣的民眾報名。學員僅需具備基礎國語文溝通能力，並自備智慧型手機（課堂將協助安裝免費練習軟體），即可輕鬆上手。
+                        </p>
+                    </div>
+                    <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap gap-2 text-xs font-bold text-amber-900">
+                        <span class="px-3 py-1 rounded-full bg-amber-100">初階入門零門檻</span>
+                        <span class="px-3 py-1 rounded-full bg-amber-100">20－80歲皆宜</span>
+                        <span class="px-3 py-1 rounded-full bg-amber-100">需自備智慧型手機</span>
+                    </div>
+                </article>
+
+                <!-- 授課方式 -->
+                <article class="bg-white rounded-3xl p-6 sm:p-7 shadow-md border-t-4 border-rummi-dark flex flex-col justify-between print-break-inside">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="rummi-tile w-11 h-12 rounded-xl flex items-center justify-center text-rummi-dark font-black text-xl shrink-0">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </span>
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Teaching Methods</span>
+                                <h3 class="text-xl font-extrabold text-slate-900">授課方式</h3>
+                            </div>
+                        </div>
+                        <p class="text-slate-700 leading-relaxed">
+                            採「主題探討或簡報介紹」講解規則與素養概念，搭配「講師示範與實際操作」、「個別指導與反覆練習」熟悉牌局；透過「團體互動及小組活動」、「案例討論與心得分享」深化情緒交流，並舉辦「學員競賽及獎勵表揚」激發學習熱情。
+                        </p>
+                    </div>
+                    <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap gap-2 text-xs font-bold text-slate-700">
+                        <span class="px-3 py-1 rounded-full bg-slate-100">實作演練</span>
+                        <span class="px-3 py-1 rounded-full bg-slate-100">小組互動</span>
+                        <span class="px-3 py-1 rounded-full bg-slate-100">趣味競賽表揚</span>
+                    </div>
+                </article>
+            </div>
+
+            <!-- 發展計畫 & 教學設計（亮點示範） -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 發展計畫 -->
+                <article class="bg-white rounded-3xl p-6 sm:p-7 shadow-md border border-slate-200/80 print-break-inside">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="rummi-tile w-11 h-12 rounded-xl flex items-center justify-center text-emerald-600 font-black text-xl shrink-0">
+                            <i class="fa-solid fa-seedling"></i>
+                        </span>
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Future Development</span>
+                            <h3 class="text-xl font-extrabold text-slate-900">發展計畫</h3>
+                        </div>
+                    </div>
+                    <p class="text-slate-700 leading-relaxed">
+                        未來可開設進階策略班，培訓學員成為社區桌遊與數位種子講師，走入彰化在地樂齡據點服務，並籌辦跨校區「彰化社大盃」跨世代拉密交流賽，深化社區共融影響力。
+                    </p>
+                </article>
+
+                <!-- 教學設計（亮點示範） -->
+                <article class="bg-gradient-to-br from-red-50/70 to-amber-50/80 rounded-3xl p-6 sm:p-7 shadow-md border border-red-200/80 print-break-inside">
+                    <div class="flex items-center justify-between gap-2 mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="rummi-tile w-11 h-12 rounded-xl flex items-center justify-center text-rummi-red font-black text-xl shrink-0">
+                                <i class="fa-solid fa-star"></i>
+                            </span>
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-rummi-red">Lesson Plan Highlight</span>
+                                <h3 class="text-xl font-extrabold text-slate-900">教學設計（亮點示範）</h3>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-rummi-red text-white text-xs font-bold shrink-0">第6週教案</span>
+                    </div>
+                    <p class="text-slate-800 font-medium leading-relaxed">
+                        第6週「當卡關遇見深呼吸：情緒調節與牌局逆轉」：先以情境短片引導覺察焦慮感（15分），示範正向自我對話與拆牌技巧（25分），分組實戰練習輪流表達牌局心情與互相鼓勵（60分），最後進行團體回饋分享（20分）。
+                    </p>
+                </article>
+            </div>
+        </section>
+
+        <!-- 3. 18週課程大綱（互動篩選/搜尋 + 桌機表格與手機卡片自適應呈現） -->
+        <section aria-labelledby="syllabus-heading" class="bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-slate-200/80">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <span class="rummi-tile w-12 h-14 rounded-xl flex items-center justify-center text-rummi-blue font-black text-2xl shrink-0">
+                        18
+                    </span>
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-rummi-blue">18-Week Syllabus</span>
+                        <h2 id="syllabus-heading" class="text-2xl sm:text-3xl font-black text-slate-900">18週課程大綱</h2>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-500 font-medium">
+                    點擊下方標籤可快速篩選課程主軸，或輸入關鍵字搜尋
+                </p>
+            </div>
+
+            <!-- 搜尋與分類篩選列（列印時隱藏） -->
+            <div class="no-print space-y-4 mb-6 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200/80">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <!-- 關鍵字搜尋框 -->
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="searchInput" oninput="filterSyllabus()" 
+                            placeholder="搜尋週次、主題或關鍵字（例如：App、情緒、AI、成果展...）" 
+                            class="w-full pl-11 pr-10 py-3 rounded-xl bg-white border border-slate-300 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rummi-blue focus:border-transparent font-medium">
+                        <button id="clearSearchBtn" type="button" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 cursor-pointer" aria-label="清除搜尋">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 標籤篩選按鈕組 -->
+                <div class="flex flex-wrap gap-2" role="group" aria-label="課程大綱分類篩選">
+                    <button type="button" data-filter="all" onclick="setFilter('all')"
+                        class="filter-btn active px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer bg-rummi-dark text-white shadow-sm">
+                        全部顯示 (18)
+                    </button>
+                    <button type="button" data-filter="sel" onclick="setFilter('sel')"
+                        class="filter-btn px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-red-50 hover:text-rummi-red hover:border-rummi-red">
+                        <i class="fa-solid fa-heart mr-1.5 text-rummi-red"></i>社會情緒 SEL
+                    </button>
+                    <button type="button" data-filter="digital" onclick="setFilter('digital')"
+                        class="filter-btn px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-blue-50 hover:text-rummi-blue hover:border-rummi-blue">
+                        <i class="fa-solid fa-mobile-screen-button mr-1.5 text-rummi-blue"></i>資訊素養
+                    </button>
+                    <button type="button" data-filter="practice" onclick="setFilter('practice')"
+                        class="filter-btn px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-amber-50 hover:text-rummi-amber hover:border-rummi-amber">
+                        <i class="fa-solid fa-trophy mr-1.5 text-rummi-amber"></i>規則與實戰
+                    </button>
+                </div>
+            </div>
+
+            <!-- 查無資料提示訊息 -->
+            <div id="noResultsMessage" class="hidden text-center py-12 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                <i class="fa-regular fa-face-thinking text-4xl text-slate-400 mb-3"></i>
+                <p class="text-lg font-bold text-slate-700">找不到符合條件的課程週次</p>
+                <p class="text-sm text-slate-500 mt-1 mb-4">請嘗試更換關鍵字或切換回「全部顯示」</p>
+                <button type="button" onclick="resetFilters()" class="px-5 py-2.5 rounded-xl bg-rummi-dark text-white font-bold text-sm hover:bg-slate-800 transition cursor-pointer">
+                    顯示全部 18 週課程
+                </button>
+            </div>
+
+            <!-- 桌機與平板版：清晰結構化表格 -->
+            <div class="hidden md:block overflow-hidden rounded-2xl border border-slate-200">
+                <table id="syllabus-desktop-table" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-rummi-dark text-white text-sm uppercase tracking-wider">
+                            <th scope="col" class="py-4 px-5 w-28 font-bold text-center">週</th>
+                            <th scope="col" class="py-4 px-5 w-1/3 font-bold">主題</th>
+                            <th scope="col" class="py-4 px-5 font-bold">內容</th>
+                        </tr>
+                    </thead>
+                    <tbody id="desktopTableBody" class="divide-y divide-slate-200 text-slate-700">
+                        <!-- 由 JavaScript 動態渲染，確保文字一字不差 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 手機版：高可讀性卡片自適應列表 -->
+            <div id="syllabus-mobile-cards" class="md:hidden space-y-4">
+                <!-- 由 JavaScript 動態渲染，確保文字一字不差 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 頁尾資訊 -->
+    <footer class="bg-rummi-dark text-slate-300 py-10 px-4 sm:px-6 lg:px-8 border-t-4 border-rummi-amber">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+                <p class="font-bold text-white text-lg">彰化社區大學 ｜ 玩轉拉密：跨代腦力與數位共學</p>
+                <p class="text-sm text-slate-400 mt-1">彰化社區大學 18週跨世代桌遊與數位共學課程，適合20至80歲全齡學員</p>
+            </div>
+            <div class="flex items-center gap-2 no-print">
+                <a href="#" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition">
+                    <i class="fa-solid fa-arrow-up mr-1.5"></i>回到頂部
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 課程資料與互動邏輯腳本 -->
+    <script>
+        // 嚴格保留原始18週課程大綱文字，一字不改
+        const syllabusData = [
+            {
+                week: "第1週",
+                topic: "破冰相見歡：拉密的奇幻世界",
+                content: "課程介紹與跨代分組破冰，認識拉密起源、牌組結構與基本「破冰（30點）」規則，透過簡易暖身賽體驗數字排列樂趣，建立友善共學氛圍。",
+                tags: ["sel", "practice"],
+                tileColor: "text-rummi-red"
+            },
+            {
+                week: "第2週",
+                topic: "眼明手快：順子與群組的邏輯魔法",
+                content: "深入練習同色連號（順子）與同數異色（群組）變化，訓練視覺掃描與專注力，並在小組合作解題中學習傾聽隊友建議，培養團隊默契。",
+                tags: ["sel", "practice"],
+                tileColor: "text-rummi-blue"
+            },
+            {
+                week: "第3週",
+                topic: "百搭牌的藝術：彈性思維與資源運用",
+                content: "學習百搭牌（鬼牌）的替換與回收技巧，結合社會情緒學習（SEL）中的「自我覺察」，引導學員思考面對突發狀況時的彈性應變心態。",
+                tags: ["sel", "practice"],
+                tileColor: "text-rummi-amber"
+            },
+            {
+                week: "第4週",
+                topic: "數位小幫手：線上拉密App初體驗",
+                content: "指導學員在手機下載並操作官方拉密App，認識數位介面、設定倒數計時器，透過科技輔助隨時練習，消弭高齡學員對數位工具的陌生感。",
+                tags: ["digital"],
+                tileColor: "text-rummi-dark"
+            },
+            {
+                week: "第5週",
+                topic: "拆牌重組術：從混亂中尋找新契機",
+                content: "進階講解「拆解現有牌組」與「借牌重組」策略，訓練逆向思考能力；透過模擬殘局挑戰，鼓勵學員不怕犯錯、勇於嘗試新路徑。",
+                tags: ["practice"],
+                tileColor: "text-rummi-red"
+            },
+            {
+                week: "第6週",
+                topic: "當卡關遇見深呼吸：情緒調節與牌局逆轉",
+                content: "融入SEL「自我管理」核心，探討牌運不佳或被對手搶先出牌時的焦慮情緒，練習深呼吸冷靜法與正向轉念，在實戰中保持優雅風度。",
+                tags: ["sel"],
+                tileColor: "text-rummi-blue",
+                highlight: true
+            },
+            {
+                week: "第7週",
+                topic: "資訊素養第一課：桌遊社群與網路安全",
+                content: "結合數位素養，教導辨識線上遊戲廣告陷阱、帳號防盜設定，以及如何在LINE群組安全分享戰績與辨別網路假訊息，守護數位安全。",
+                tags: ["digital"],
+                tileColor: "text-rummi-amber"
+            },
+            {
+                week: "第8週",
+                topic: "跨代雙人賽：傾聽與同理心的溝通課",
+                content: "採「青銀配對」雙人合作賽制，規定隊友間以非語言或正向鼓勵溝通，體驗不同世代的思考節奏，學習同理心與有效溝通技巧。",
+                tags: ["sel", "practice"],
+                tileColor: "text-rummi-dark"
+            },
+            {
+                week: "第9週",
+                topic: "公民素養週",
+                content: "由彰化社區大學安排",
+                tags: ["civic"],
+                tileColor: "text-emerald-700",
+                isCivicWeek: true
+            },
+            {
+                week: "第10週",
+                topic: "局勢觀察家：牌桌上的大數據思維",
+                content: "學習計算已出現的牌張與推測對手手牌，培養邏輯推理與風險評估能力；同時延伸討論日常生活中如何透過客觀資訊做決定，避免盲從。",
+                tags: ["digital", "practice"],
+                tileColor: "text-rummi-red"
+            },
+            {
+                week: "第11週",
+                topic: "創意變體玩法：顛覆傳統的腦力激盪",
+                content: "介紹「快節奏模式」、「限制時間出牌」等創意變體規則，激發大腦神經可塑性，讓學員在歡笑與刺激中突破思維框架。",
+                tags: ["practice"],
+                tileColor: "text-rummi-blue"
+            },
+            {
+                week: "第12週",
+                topic: "數位影像紀錄：用手機拍出你的高光時刻",
+                content: "運用手機相機與簡易修圖軟體，學習構圖與光影技巧，為自己與組員拍攝牌局專注神情，製作專屬的「拉密學習成長數位明信片」。",
+                tags: ["digital"],
+                tileColor: "text-rummi-amber"
+            },
+            {
+                week: "第13週",
+                topic: "輸贏之外的風景：挫折容忍與運動家精神",
+                content: "透過經典賽事案例討論，引導學員看待成敗得失，練習在獲勝時謙遜、落敗時真誠讚美對手，建立健康正向的人際互動關係。",
+                tags: ["sel"],
+                tileColor: "text-rummi-dark"
+            },
+            {
+                week: "第14週",
+                topic: "社區關懷預備役：如何帶領長輩玩桌遊",
+                content: "角色互換練習，學習如何用清晰口語、放大字體輔助工具向高齡者或新手解說規則，培養學員成為具備耐心與服務熱忱的社區推廣員。",
+                tags: ["sel", "practice"],
+                tileColor: "text-rummi-red"
+            },
+            {
+                week: "第15週",
+                topic: "AI遇見拉密：與人工智慧切磋牌技",
+                content: "體驗與App內建高階AI對戰，觀察電腦演算邏輯與人類直覺思考的差異，建立正確看待AI科技的態度，享受人機共學的樂趣。",
+                tags: ["digital"],
+                tileColor: "text-rummi-blue"
+            },
+            {
+                week: "第16週",
+                topic: "彰化社大模擬盃：積分循環熱身賽",
+                content: "比照正式比賽規格進行積分循環賽，學員輪流擔任計時員與裁判，落實公平競爭、情緒穩定與團隊協作，為期末大賽暖身。",
+                tags: ["practice"],
+                tileColor: "text-rummi-amber"
+            },
+            {
+                week: "第17週",
+                topic: "精彩回顧與策展：我們的共學故事牆",
+                content: "彙整16週以來的活動照片、心得金句與戰績統計，分組設計海報與簡報，籌備期末成果展的攤位布置與體驗關卡設計。",
+                tags: ["practice"],
+                tileColor: "text-rummi-dark"
+            },
+            {
+                week: "第18週",
+                topic: "「智匯彰化．跨代共融」拉密嘉年華成果展",
+                content: "舉辦期末成果發表暨趣味挑戰賽，邀請親友與社區民眾蒞臨體驗，由學員擔任關主教學並分享學習蛻變，頒發結業證書與特色獎項。",
+                tags: ["practice"],
+                tileColor: "text-rummi-red",
+                isFinale: true
+            }
+        ];
+
+        let currentFilter = 'all';
+
+        // 產生分類小徽章 HTML
+        function getTagBadges(tags) {
+            const map = {
+                sel: '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-red-100 text-rummi-red">社會情緒 SEL</span>',
+                digital: '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-blue-100 text-rummi-blue">資訊素養</span>',
+                practice: '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-800">規則與實戰</span>',
+                civic: '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800">社大統一安排</span>'
+            };
+            return tags.map(t => map[t] || '').join(' ');
+        }
+
+        // 渲染課程大綱（同步更新桌機表格與手機卡片）
+        function renderSyllabus(items) {
+            const tbody = document.getElementById('desktopTableBody');
+            const mobileContainer = document.getElementById('syllabus-mobile-cards');
+            const noResults = document.getElementById('noResultsMessage');
+
+            tbody.innerHTML = '';
+            mobileContainer.innerHTML = '';
+
+            if (items.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            items.forEach((item, index) => {
+                // 特殊週次（第6週教學設計示範、第9週公民素養週、第18週成果展）視覺突顯
+                let rowBg = index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+                let cardBorder = 'border-slate-200 bg-white';
+                let specialBadge = '';
+
+                if (item.isCivicWeek) {
+                    rowBg = 'bg-emerald-50/80';
+                    cardBorder = 'border-emerald-300 bg-emerald-50/60';
+                    specialBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-600 text-white ml-1.5">社大統一週次</span>';
+                } else if (item.isFinale) {
+                    rowBg = 'bg-amber-50/90';
+                    cardBorder = 'border-amber-400 bg-amber-50/70 ring-1 ring-amber-300';
+                    specialBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-rummi-amber text-white ml-1.5"><i class="fa-solid fa-crown mr-1"></i>期末成果展</span>';
+                } else if (item.highlight) {
+                    rowBg = 'bg-red-50/70';
+                    cardBorder = 'border-red-300 bg-red-50/50 ring-1 ring-red-200';
+                    specialBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-rummi-red text-white ml-1.5"><i class="fa-solid fa-star mr-1"></i>教學設計示範週</span>';
+                }
+
+                // 1. 桌機版表格列
+                const tr = document.createElement('tr');
+                tr.className = `${rowBg} hover:bg-amber-50/40 transition-colors print-break-inside`;
+                tr.innerHTML = `
+                    <td class="py-4 px-4 text-center align-top">
+                        <span class="rummi-tile inline-block px-3 py-1.5 rounded-xl font-black text-sm ${item.tileColor}">
+                            ${item.week}
+                        </span>
+                    </td>
+                    <td class="py-4 px-5 align-top">
+                        <div class="font-extrabold text-slate-900 text-base leading-snug">
+                            ${item.topic}
+                            ${specialBadge}
+                        </div>
+                        <div class="mt-2 flex flex-wrap gap-1.5 no-print">${getTagBadges(item.tags)}</div>
+                    </td>
+                    <td class="py-4 px-5 align-top text-slate-700 leading-relaxed">
+                        ${item.content}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // 2. 手機版卡片
+                const card = document.createElement('div');
+                card.className = `rounded-2xl p-5 border shadow-sm ${cardBorder}`;
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 mb-2.5">
+                        <div class="flex items-center flex-wrap gap-1">
+                            <span class="rummi-tile px-3 py-1 rounded-xl font-black text-sm ${item.tileColor}">
+                                ${item.week}
+                            </span>
+                            ${specialBadge}
+                        </div>
+                    </div>
+                    <div class="mb-2 flex flex-wrap gap-1.5">${getTagBadges(item.tags)}</div>
+                    <h3 class="font-extrabold text-slate-900 text-lg leading-snug mb-2">${item.topic}</h3>
+                    <p class="text-slate-700 text-base leading-relaxed">${item.content}</p>
+                `;
+                mobileContainer.appendChild(card);
+            });
+        }
+
+        // 設定分類篩選按鈕狀態
+        function setFilter(filterKey) {
+            currentFilter = filterKey;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filterKey) {
+                    btn.className = 'filter-btn active px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer bg-rummi-dark text-white shadow-sm';
+                } else {
+                    btn.className = 'filter-btn px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer bg-white text-slate-700 border border-slate-300 hover:bg-slate-100';
+                }
+            });
+            filterSyllabus();
+        }
+
+        // 執行篩選與關鍵字搜尋
+        function filterSyllabus() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const keyword = searchInput.value.trim().toLowerCase();
+
+            if (keyword.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            const filtered = syllabusData.filter(item => {
+                const matchesTag = currentFilter === 'all' || item.tags.includes(currentFilter);
+                const matchesKeyword = !keyword || 
+                    item.week.toLowerCase().includes(keyword) || 
+                    item.topic.toLowerCase().includes(keyword) || 
+                    item.content.toLowerCase().includes(keyword);
+                return matchesTag && matchesKeyword;
+            });
+
+            renderSyllabus(filtered);
+        }
+
+        // 清除搜尋框
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            filterSyllabus();
+        }
+
+        // 重設所有篩選條件
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            setFilter('all');
+        }
+
+        // 全齡友善：切換標準 / 放大字體
+        function toggleFontSize() {
+            const htmlEl = document.documentElement;
+            const textSpan = document.getElementById('fontToggleText');
+            const btn = document.getElementById('fontToggleBtn');
+
+            htmlEl.classList.toggle('large-text');
+            const isLarge = htmlEl.classList.contains('large-text');
+
+            if (isLarge) {
+                textSpan.textContent = '字體：放大';
+                btn.classList.remove('bg-amber-50', 'text-amber-900', 'border-amber-300');
+                btn.classList.add('bg-amber-500', 'text-slate-950', 'border-amber-600');
+            } else {
+                textSpan.textContent = '字體：標準';
+                btn.classList.remove('bg-amber-500', 'text-slate-950', 'border-amber-600');
+                btn.classList.add('bg-amber-50', 'text-amber-900', 'border-amber-300');
+            }
+        }
+
+        // 頁面載入後初始化渲染完整18週大綱
+        window.addEventListener('DOMContentLoaded', () => {
+            renderSyllabus(syllabusData);
+        });
+    </script>
+</body>
+</html>
