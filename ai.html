@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>許惠的 AI 學習成果短影音分鏡腳本 | 彰化社區大學</title>
+  <!-- 載入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 載入 Google Fonts 思源黑體與 Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', '"Inter"', 'sans-serif'],
+          },
+          colors: {
+            warmbg: '#FDFBF7',      // 暖米色背景
+            warmcard: '#FFFFFF',    // 純白卡片
+            deepnavy: '#1E293B',    // 深藍灰文字
+            warmorange: {
+              50: '#FFF7ED',
+              100: '#FFEDD5',
+              500: '#F97316',
+              600: '#EA580C',
+              700: '#C2410C',
+            },
+            laketeal: {
+              50: '#F0FDFA',
+              100: '#CCFBF1',
+              600: '#0D9488',
+              700: '#0F766E',
+              800: '#115E59',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 基礎無障礙與動態字體大小設定 */
+    :root {
+      --base-font-size: 16px;
+    }
+    html {
+      font-size: var(--base-font-size);
+      scroll-behavior: smooth;
+    }
+    body {
+      background-color: #FDFBF7;
+      color: #1E293B;
+      line-height: 1.75;
+    }
+
+    /* 字體縮放層級 */
+    html.font-standard { --base-font-size: 16px; }
+    html.font-large { --base-font-size: 19px; }
+    html.font-xlarge { --base-font-size: 22px; }
+
+    /* 自訂核取方塊動效 */
+    .custom-checkbox:checked + div {
+      background-color: #0D9488;
+      border-color: #0D9488;
+    }
+    .custom-checkbox:checked + div svg {
+      display: block;
+    }
+
+    /* 列印專用樣式最佳化 */
+    @media print {
+      body {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        font-size: 12pt !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .shadow-sm, .shadow-md, .shadow-lg {
+        box-shadow: none !important;
+      }
+      .scene-card {
+        break-inside: avoid;
+        border: 1px solid #CBD5E1 !important;
+        margin-bottom: 1rem !important;
+      }
+      /* 列印時強制展開表格或清楚呈現卡片 */
+      header {
+        border-bottom: 2px solid #EA580C !important;
+        padding-bottom: 1rem !important;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-warmorange-100 selection:text-warmorange-700">
+
+  <!-- 頂部固定導覽列：無障礙字體切換 & 進度總覽 -->
+  <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-orange-100 shadow-sm no-print">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- 品牌識別 -->
+      <div class="flex items-center gap-2.5">
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-warmorange-500 text-white font-bold shadow-sm">
+          🎬
+        </span>
+        <div>
+          <span class="font-bold text-deepnavy text-base sm:text-lg block leading-tight">短影音拍攝企劃</span>
+          <span class="text-xs text-slate-500 hidden sm:inline">彰化社區大學・AI 學習成果</span>
+        </div>
+      </div>
+
+      <!-- 無障礙字體大小切換按鈕群組 -->
+      <div class="flex items-center gap-2 bg-orange-50/80 p-1.5 rounded-xl border border-orange-200/70" role="group" aria-label="字體大小調整">
+        <span class="text-xs font-semibold text-warmorange-700 pl-2 pr-1 hidden md:inline">字體大小：</span>
+        <button type="button" onclick="setFontSize('standard')" id="btn-font-standard"
+          class="font-btn px-3 py-1.5 rounded-lg text-sm font-bold transition-all bg-warmorange-500 text-white shadow-sm cursor-pointer">
+          標準
+        </button>
+        <button type="button" onclick="setFontSize('large')" id="btn-font-large"
+          class="font-btn px-3 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-700 hover:bg-orange-100 cursor-pointer">
+          放大
+        </button>
+        <button type="button" onclick="setFontSize('xlarge')" id="btn-font-xlarge"
+          class="font-btn px-3 py-1.5 rounded-lg text-sm font-bold transition-all text-slate-700 hover:bg-orange-100 cursor-pointer">
+          特大
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 頁首橫幅 (Hero Section) -->
+  <header class="relative overflow-hidden bg-gradient-to-br from-orange-50 via-amber-50/70 to-teal-50/60 border-b border-orange-100">
+    <!-- 裝飾性拉密幾何色塊 -->
+    <div class="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-warmorange-500/10 blur-2xl pointer-events-none"></div>
+    <div class="absolute -bottom-20 -left-16 w-72 h-72 rounded-full bg-laketeal-600/10 blur-2xl pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14 relative z-10">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-orange-200 shadow-sm text-warmorange-700 font-bold text-sm mb-4">
+        <span>✨ 終身學習・創意實踐</span>
+      </div>
+
+      <h1 class="text-2xl sm:text-4xl font-black text-deepnavy tracking-tight leading-snug mb-3">
+        許惠的 AI 學習成果短影音分鏡腳本
+      </h1>
+
+      <p class="text-base sm:text-xl font-bold text-laketeal-800 mb-6">
+        69歲 × 彰化社區大學《讓AI解決我的生活大小事》（指導老師：李信賢）
+      </p>
+
+      <!-- 影片資訊標籤列 -->
+      <div class="flex flex-wrap gap-2.5 sm:gap-3">
+        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200/80 shadow-sm text-sm sm:text-base font-semibold text-deepnavy">
+          <span class="text-warmorange-500">⏱️</span> 總片長：約 50～60 秒
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200/80 shadow-sm text-sm sm:text-base font-semibold text-deepnavy">
+          <span class="text-laketeal-600">🎞️</span> 架構：共 5 幕
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200/80 shadow-sm text-sm sm:text-base font-semibold text-deepnavy">
+          <span class="text-amber-500">🎲</span> 主題：從害怕按錯鍵到親手打造拉密網頁與 AI 作品
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要內容區 -->
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-10">
+
+    <!-- 區塊一：完整旁白逐字稿 & 配音練習計時器 -->
+    <section aria-labelledby="voiceover-heading" class="bg-white rounded-3xl border border-orange-100 shadow-sm p-6 sm:p-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+        <div>
+          <h2 id="voiceover-heading" class="text-xl sm:text-2xl font-bold text-deepnavy flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-warmorange-100 text-warmorange-600 inline-flex items-center justify-center text-lg">🎙️</span>
+            完整旁白逐字稿與配音計時
+          </h2>
+          <p class="text-sm text-slate-600 mt-1">可一鍵複製講稿，或開啟計時器練習在 60 秒內從容念完。</p>
+        </div>
+
+        <!-- 工具列：計時器 + 一鍵複製 -->
+        <div class="flex flex-wrap items-center gap-3 no-print">
+          <!-- 配音練習計時器 -->
+          <div class="flex items-center gap-2 bg-laketeal-50 border border-laketeal-200 px-3.5 py-2 rounded-2xl">
+            <span class="text-xs font-bold text-laketeal-800">計時：</span>
+            <span id="timer-display" class="font-mono font-bold text-lg text-laketeal-700 min-w-[3.8rem] text-center">00:00</span>
+            <button type="button" id="btn-timer-toggle" onclick="toggleTimer()"
+              class="px-3 py-1 rounded-xl bg-laketeal-600 hover:bg-laketeal-700 text-white text-sm font-bold transition cursor-pointer">
+              開始
+            </button>
+            <button type="button" onclick="resetTimer()"
+              class="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-sm font-semibold transition cursor-pointer">
+              重設
+            </button>
+          </div>
+
+          <!-- 一鍵複製按鈕 -->
+          <button type="button" onclick="copyFullScript()"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-warmorange-500 hover:bg-warmorange-600 active:scale-[0.99] text-white font-bold text-sm sm:text-base shadow-sm transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+            </svg>
+            一鍵複製完整講稿
+          </button>
+        </div>
+      </div>
+
+      <!-- 講稿內文框 -->
+      <div id="full-script-text" class="mt-5 p-5 sm:p-6 rounded-2xl bg-warmbg border border-orange-200/60 text-deepnavy space-y-3 leading-relaxed">
+        <p>「大家好，我是許惠，今年69歲。每個週六下午，我都會來到彰化社區大學，參加李信賢老師開設的《讓AI解決我的生活大小事》AI初階課程。</p>
+        <p>以前總覺得科技離自己很遠，甚至有些害怕按錯鍵。但在這裡，我跟著老師一步步摸索，發現AI就像一位隨傳隨到的貼心助手。</p>
+        <p>從一開始練習寫出流暢的文字稿，到後來竟然能親手生成可愛的Q版吉祥物圖像、專屬標誌，甚至做出互動式的『拉密課程網頁』與動聽的音樂影片！</p>
+        <p>看著自己熱愛的拉密桌遊，透過AI變成一個個精美又實用的作品，那份『原來我也能做到』的突破與成就感，每次都讓我感動不已。</p>
+        <p class="font-bold text-warmorange-700">學習不分年紀，這堂課讓我體驗到親手創造奇蹟的快樂！」</p>
+      </div>
+
+      <!-- 複製狀態提示訊息框 (取代 alert) -->
+      <div id="toast-message" role="status" aria-live="polite"
+        class="hidden mt-3 px-4 py-2.5 rounded-xl bg-laketeal-600 text-white text-sm font-bold items-center gap-2 shadow-sm">
+        <span>✅ 完整講稿已成功複製到剪貼簿！可以直接貼到手機備忘錄或讀稿機囉。</span>
+      </div>
+    </section>
+
+    <!-- 區塊二：分鏡腳本控制列（檢視切換 & 拍攝進度條） -->
+    <section aria-labelledby="storyboard-heading" class="space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm">
+        <div>
+          <h2 id="storyboard-heading" class="text-xl sm:text-2xl font-bold text-deepnavy flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-laketeal-100 text-laketeal-700 inline-flex items-center justify-center text-lg">📋</span>
+            5 幕分鏡腳本與拍攝清單
+          </h2>
+          <!-- 拍攝進度顯示 -->
+          <div class="flex items-center gap-3 mt-2">
+            <div class="w-36 sm:w-48 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+              <div id="progress-bar" class="h-full bg-laketeal-600 transition-all duration-300" style="width: 0%;"></div>
+            </div>
+            <span id="progress-text" class="text-sm font-bold text-laketeal-700">已完成 0 / 5 幕拍攝</span>
+          </div>
+        </div>
+
+        <!-- 檢視模式切換按鈕 -->
+        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl self-start sm:self-auto no-print" role="group" aria-label="檢視模式切換">
+          <button type="button" id="btn-view-cards" onclick="switchView('cards')"
+            class="px-4 py-2 rounded-xl text-sm font-bold transition bg-white text-deepnavy shadow-sm cursor-pointer">
+            🗂️ 卡片時間軸
+          </button>
+          <button type="button" id="btn-view-table" onclick="switchView('table')"
+            class="px-4 py-2 rounded-xl text-sm font-bold transition text-slate-600 hover:text-deepnavy cursor-pointer">
+            📊 專業分鏡表
+          </button>
+        </div>
+      </div>
+
+      <!-- 模式 A：卡片時間軸模式 (預設顯示) -->
+      <div id="view-cards" class="space-y-6">
+        <!-- 由 JavaScript 動態渲染 5 幕卡片 -->
+      </div>
+
+      <!-- 模式 B：專業分鏡表格模式 -->
+      <div id="view-table" class="hidden bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-800 text-white text-sm sm:text-base">
+                <th class="p-4 font-bold w-16 text-center">完成</th>
+                <th class="p-4 font-bold w-40">幕次 / 時間</th>
+                <th class="p-4 font-bold">畫面建議與視覺重點</th>
+                <th class="p-4 font-bold">旁白內容與字卡重點</th>
+                <th class="p-4 font-bold w-56">音效與音樂氛圍</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-slate-200 text-sm sm:text-base">
+              <!-- 由 JavaScript 動態渲染表格列 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 區塊三：拍攝與剪輯小撇步 -->
+    <section aria-labelledby="tips-heading" class="bg-gradient-to-r from-amber-50 to-orange-50/80 rounded-3xl border border-orange-200/80 p-6 sm:p-8 shadow-sm">
+      <h2 id="tips-heading" class="text-xl sm:text-2xl font-bold text-deepnavy flex items-center gap-2 mb-5">
+        <span class="w-8 h-8 rounded-lg bg-warmorange-500 text-white inline-flex items-center justify-center text-lg">💡</span>
+        拍攝與剪輯小撇步
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- 卡片 1 -->
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-orange-100 shadow-sm">
+          <div class="flex items-center gap-2.5 mb-3">
+            <span class="px-3 py-1 rounded-lg bg-laketeal-100 text-laketeal-800 font-bold text-sm">畫面技巧</span>
+            <h3 class="font-bold text-lg text-deepnavy">錄製「拉密網頁」畫面技巧</h3>
+          </div>
+          <p class="text-slate-700 leading-relaxed">
+            建議使用手機或電腦的<strong class="text-laketeal-700 font-bold">「螢幕錄影功能」</strong>，實際去點擊網頁上的<strong class="text-warmorange-600 font-bold">「字體放大／縮小按鈕」</strong>或展開<strong class="text-warmorange-600 font-bold">「18週課程大綱」</strong>。有手指滑動與互動變化的動態畫面，會比靜態截圖更吸睛、更有專業感！
+          </p>
+        </div>
+
+        <!-- 卡片 2 -->
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-orange-100 shadow-sm">
+          <div class="flex items-center gap-2.5 mb-3">
+            <span class="px-3 py-1 rounded-lg bg-warmorange-100 text-warmorange-800 font-bold text-sm">聲音表情</span>
+            <h3 class="font-bold text-lg text-deepnavy">配音語氣與停頓建議</h3>
+          </div>
+          <p class="text-slate-700 leading-relaxed">
+            錄音時保持微笑，在念到<strong class="text-warmorange-600 font-bold">「竟然能親手生成……」</strong>以及<strong class="text-warmorange-600 font-bold">「原來我也能做到」</strong>這兩句時，語氣可以稍微上揚、帶一點驚喜與驕傲感，並放慢半拍，聽起來會更有故事感染力！
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 頁尾功能列：列印 / 匯出 PDF -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 no-print">
+      <button type="button" onclick="window.print()"
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-deepnavy hover:bg-slate-800 text-white font-bold text-base sm:text-lg shadow-md transition cursor-pointer">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        列印 / 匯出 PDF 腳本（帶去教室拍攝）
+      </button>
+    </div>
+
+  </main>
+
+  <!-- 頁尾署名 -->
+  <footer class="bg-white border-t border-slate-200/80 mt-12 py-8 text-center">
+    <div class="max-w-5xl mx-auto px-4">
+      <p class="font-bold text-deepnavy text-base sm:text-lg">
+        彰化社區大學《讓AI解決我的生活大小事》學員 許惠 製作
+      </p>
+      <p class="text-sm text-slate-500 mt-1">
+        指導老師：李信賢 ｜ 學習不分年紀，親手創造奇蹟的快樂 ✨
+      </p>
+    </div>
+  </footer>
+
+  <!-- 互動功能 JavaScript -->
+  <script>
+    // 1. 完整的 5 幕分鏡資料結構
+    const storyboardData = [
+      {
+        id: 1,
+        actTitle: "第一幕：初心與啟程",
+        timeRange: "00:00 - 00:12",
+        duration: "12秒",
+        badgeColor: "bg-warmorange-500",
+        visualTag: "實拍與字卡",
+        visuals: [
+          "彰化社區大學校園一角空景，營造週六午後的悠閒氛圍。",
+          "鏡頭帶到許惠微笑走進教室、坐在筆電前準備上課的親切畫面。"
+        ],
+        subtitleCard: "69歲 × 彰化社區大學《讓AI解決我的生活大小事》",
+        voiceover: "「大家好，我是許惠，今年69歲。每個週六下午，我都會來到彰化社區大學，參加李信賢老師開設的《讓AI解決我的生活大小事》AI初階課程。」",
+        audioTag: "溫暖輕快",
+        audioDesc: "清脆的鋼琴前奏搭配輕柔的木吉他聲，營造週六午後陽光灑落、充滿期待的學習氛圍。"
+      },
+      {
+        id: 2,
+        actTitle: "第二幕：破冰與轉變",
+        timeRange: "00:12 - 00:24",
+        duration: "12秒",
+        badgeColor: "bg-amber-500",
+        visualTag: "對比與互動",
+        visuals: [
+          "先呈現對著電腦微微皺眉、猶豫按鍵的特寫（可搭配微暗或低飽和濾鏡）。",
+          "畫面一轉：李信賢老師在旁親切指導，許惠露出恍然大悟的燦爛笑容（畫面轉為明亮暖色調）。"
+        ],
+        subtitleCard: "從害怕按錯鍵 ➔ 隨傳隨到的貼心助手",
+        voiceover: "「以前總覺得科技離自己很遠，甚至有些害怕按錯鍵。但在這裡，我跟著老師一步步摸索，發現AI就像一位隨傳隨到的貼心助手。」",
+        audioTag: "節奏轉明朗",
+        audioDesc: "加入輕快的弦樂撥奏或手搖鈴節奏，音調微微上揚，象徵突破心防、豁然開朗的感覺。"
+      },
+      {
+        id: 3,
+        actTitle: "第三幕：作品大公開",
+        timeRange: "00:24 - 00:40",
+        duration: "16秒",
+        badgeColor: "bg-laketeal-600",
+        visualTag: "AI 作品成果展示（重點亮點）",
+        isHighlight: true,
+        visuals: [
+          "電腦螢幕上整齊流暢的 AI 寫作文字稿。",
+          "✨ 可愛的「拉密 Q 版吉祥物」與「幾何專屬標誌」高清特寫。",
+          "✨ 手指滑動操作互動式「拉密課程網頁」（示範點擊字體大小切換功能）。",
+          "✨ 播放一段親手製作的「AI 音樂影片」精彩片段。"
+        ],
+        subtitleCard: "Q版吉祥物 × 專屬標誌 × 互動式拉密網頁 × AI音樂影片",
+        voiceover: "「從一開始練習寫出流暢的文字稿，到後來竟然能親手生成可愛的Q版吉祥物圖像、專屬標誌，甚至做出互動式的『拉密課程網頁』與動聽的音樂影片！」",
+        audioTag: "充滿活力與驚喜",
+        audioDesc: "音樂進入副歌段落，節奏感增強（可融入一點你自己的 AI 音樂作品旋律作為彩蛋），展現豐富的創造力。"
+      },
+      {
+        id: 4,
+        actTitle: "第四幕：熱愛與成就感",
+        timeRange: "00:40 - 00:50",
+        duration: "10秒",
+        badgeColor: "bg-orange-600",
+        visualTag: "虛實結合的感動",
+        visuals: [
+          "實體的「拉密（Rummikub）桌遊牌架」擺在桌上，旁邊平板正開啟你的「拉密課程網頁」與 Q 版吉祥物。",
+          "雙手輕輕翻動實體拉密牌，最後給一個充滿自信與成就感的正面特寫。"
+        ],
+        subtitleCard: "原來我也能做到！",
+        voiceover: "「看著自己熱愛的拉密桌遊，透過AI變成一個個精美又實用的作品，那份『原來我也能做到』的突破與成就感，每次都讓我感動不已。」",
+        audioTag: "溫馨感動",
+        audioDesc: "音樂稍微收斂，保留溫暖的大提琴與鋼琴和弦，襯托出真摯、觸動人心的情感。"
+      },
+      {
+        id: 5,
+        actTitle: "第五幕：自信結語",
+        timeRange: "00:50 - 00:58",
+        duration: "8秒",
+        badgeColor: "bg-teal-700",
+        visualTag: "定格與落款",
+        visuals: [
+          "許惠對著鏡頭比出「讚」或比心手勢，畫面周圍浮現親手設計的 Q 版吉祥物一起揮手。",
+          "畫面最後優雅定格在「拉密專屬標誌」與課程名稱字卡。"
+        ],
+        subtitleCard: "學習不分年紀・親手創造奇蹟的快樂",
+        voiceover: "「學習不分年紀，這堂課讓我體驗到親手創造奇蹟的快樂！」",
+        audioTag: "明亮收尾",
+        audioDesc: "鋼琴與弦樂共同奏出溫暖、充滿希望的結束和弦，自然淡出。"
+      }
+    ];
+
+    // 2. 狀態管理：拍攝完成核取進度 (使用 localStorage 保存)
+    const STORAGE_KEY = 'xuhui_ai_storyboard_checked_v1';
+    let checkedScenes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+    function toggleSceneCheck(id) {
+      checkedScenes[id] = !checkedScenes[id];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(checkedScenes));
+      renderStoryboard();
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const total = storyboardData.length;
+      const completed = storyboardData.filter(item => checkedScenes[item.id]).length;
+      const percent = Math.round((completed / total) * 100);
+      
+      document.getElementById('progress-bar').style.width = `${percent}%`;
+      document.getElementById('progress-text').textContent = `已完成 ${completed} / ${total} 幕拍攝 (${percent}%)`;
+    }
+
+    // 3. 渲染分鏡腳本（同時更新卡片與表格模式）
+    function renderStoryboard() {
+      const cardsContainer = document.getElementById('view-cards');
+      const tableBody = document.getElementById('table-body');
+
+      cardsContainer.innerHTML = '';
+      tableBody.innerHTML = '';
+
+      storyboardData.forEach(scene => {
+        const isChecked = !!checkedScenes[scene.id];
+
+        // --- 渲染卡片模式 ---
+        const cardHTML = `
+          <article class="scene-card relative bg-white rounded-3xl border ${scene.isHighlight ? 'border-laketeal-300 ring-2 ring-laketeal-500/20' : 'border-slate-200/90'} shadow-sm transition-all overflow-hidden ${isChecked ? 'opacity-85 bg-slate-50/60' : ''}">
+            <!-- 卡片頂部色條與標題列 -->
+            <div class="px-6 py-4 bg-gradient-to-r ${scene.isHighlight ? 'from-teal-50 to-emerald-50/60 border-b border-teal-100' : 'from-orange-50/80 to-amber-50/40 border-b border-orange-100'} flex flex-wrap items-center justify-between gap-3">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="px-3.5 py-1 rounded-full ${scene.badgeColor} text-white font-bold text-sm shadow-sm">
+                  ${scene.timeRange}（${scene.duration}）
+                </span>
+                <h3 class="text-lg sm:text-xl font-black text-deepnavy">
+                  ${scene.actTitle}
+                </h3>
+                ${scene.isHighlight ? '<span class="px-2.5 py-0.5 rounded-md bg-laketeal-600 text-white text-xs font-bold">★ 核心亮點幕</span>' : ''}
+              </div>
+
+              <!-- 拍攝完成核取方塊 -->
+              <label class="inline-flex items-center gap-2.5 cursor-pointer select-none bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-laketeal-500 transition no-print">
+                <input type="checkbox" class="custom-checkbox sr-only" ${isChecked ? 'checked' : ''} onchange="toggleSceneCheck(${scene.id})">
+                <div class="w-5 h-5 rounded-md border-2 border-slate-300 flex items-center justify-center transition">
+                  <svg class="w-3.5 h-3.5 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                  </svg>
+                </div>
+                <span class="text-sm font-bold ${isChecked ? 'text-laketeal-700' : 'text-slate-600'}">
+                  ${isChecked ? '已拍攝完成' : '標記拍攝完成'}
+                </span>
+              </label>
+            </div>
+
+            <!-- 卡片內容網格 -->
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <!-- 左側：畫面建議與音樂氛圍 (7欄) -->
+              <div class="lg:col-span-7 space-y-4">
+                <div>
+                  <div class="inline-flex items-center gap-1.5 text-sm font-bold text-laketeal-700 mb-2">
+                    <span>🎥 畫面建議與視覺重點</span>
+                    <span class="px-2 py-0.5 rounded bg-laketeal-50 text-laketeal-800 border border-laketeal-200 text-xs">${scene.visualTag}</span>
+                  </div>
+                  <ul class="space-y-2 text-slate-700">
+                    ${scene.visuals.map(v => `
+                      <li class="flex items-start gap-2">
+                        <span class="text-warmorange-500 font-bold mt-0.5">•</span>
+                        <span>${v}</span>
+                      </li>
+                    `).join('')}
+                  </ul>
+                </div>
+
+                <!-- 音效與音樂氛圍 -->
+                <div class="pt-3 border-t border-slate-100">
+                  <div class="flex flex-wrap items-center gap-2 mb-1">
+                    <span class="text-sm font-bold text-slate-700">🎵 音效與配樂：</span>
+                    <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs">${scene.audioTag}</span>
+                  </div>
+                  <p class="text-sm text-slate-600">${scene.audioDesc}</p>
+                </div>
+              </div>
+
+              <!-- 右側：旁白與字卡突出框 (5欄) -->
+              <div class="lg:col-span-5 flex flex-col justify-between bg-warmbg rounded-2xl p-5 border border-orange-200/70">
+                <div>
+                  <span class="inline-block text-xs font-bold tracking-wider uppercase text-warmorange-700 bg-warmorange-100 px-2.5 py-1 rounded-md mb-2.5">
+                    🗣️ 旁白台詞
+                  </span>
+                  <p class="font-bold text-deepnavy text-base sm:text-lg leading-relaxed">
+                    ${scene.voiceover}
+                  </p>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-orange-200/60">
+                  <span class="text-xs font-bold text-slate-500 block mb-1">🏷️ 畫面重點字卡：</span>
+                  <div class="px-3 py-2 rounded-xl bg-white border border-orange-200 text-warmorange-700 font-bold text-sm">
+                    ${scene.subtitleCard}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+        cardsContainer.insertAdjacentHTML('beforeend', cardHTML);
+
+        // --- 渲染表格模式 ---
+        const rowHTML = `
+          <tr class="${isChecked ? 'bg-teal-50/40' : 'hover:bg-orange-50/30'} transition">
+            <td class="p-4 text-center align-top">
+              <input type="checkbox" class="w-5 h-5 accent-laketeal-600 cursor-pointer mt-1"
+                ${isChecked ? 'checked' : ''} onchange="toggleSceneCheck(${scene.id})" aria-label="完成${scene.actTitle}">
+            </td>
+            <td class="p-4 align-top">
+              <div class="font-bold text-deepnavy">${scene.actTitle}</div>
+              <div class="inline-block mt-1 px-2.5 py-0.5 rounded-md bg-orange-100 text-warmorange-800 font-mono text-xs font-bold">
+                ${scene.timeRange}
+              </div>
+            </td>
+            <td class="p-4 align-top">
+              <span class="inline-block px-2 py-0.5 rounded bg-laketeal-100 text-laketeal-800 text-xs font-bold mb-1.5">${scene.visualTag}</span>
+              <ul class="list-disc pl-4 space-y-1 text-slate-700">
+                ${scene.visuals.map(v => `<li>${v}</li>`).join('')}
+              </ul>
+            </td>
+            <td class="p-4 align-top">
+              <p class="font-bold text-deepnavy mb-2">${scene.voiceover}</p>
+              <div class="text-xs font-bold text-warmorange-700 bg-orange-50 border border-orange-200 px-2.5 py-1.5 rounded-lg">
+                字卡：${scene.subtitleCard}
+              </div>
+            </td>
+            <td class="p-4 align-top">
+              <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-xs mb-1">${scene.audioTag}</span>
+              <p class="text-sm text-slate-600">${scene.audioDesc}</p>
+            </td>
+          </tr>
+        `;
+        tableBody.insertAdjacentHTML('beforeend', rowHTML);
+      });
+    }
+
+    // 4. 無障礙字體大小切換功能
+    function setFontSize(size) {
+      const htmlEl = document.documentElement;
+      htmlEl.classList.remove('font-standard', 'font-large', 'font-xlarge');
+      htmlEl.classList.add(`font-${size}`);
+
+      // 更新按鈕樣式
+      document.querySelectorAll('.font-btn').forEach(btn => {
+        btn.classList.remove('bg-warmorange-500', 'text-white', 'shadow-sm');
+        btn.classList.add('text-slate-700', 'hover:bg-orange-100');
+      });
+      const activeBtn = document.getElementById(`btn-font-${size}`);
+      activeBtn.classList.remove('text-slate-700', 'hover:bg-orange-100');
+      activeBtn.classList.add('bg-warmorange-500', 'text-white', 'shadow-sm');
+    }
+
+    // 5. 檢視模式切換 (卡片時間軸 vs 專業分鏡表)
+    function switchView(mode) {
+      const cardsView = document.getElementById('view-cards');
+      const tableView = document.getElementById('view-table');
+      const btnCards = document.getElementById('btn-view-cards');
+      const btnTable = document.getElementById('btn-view-table');
+
+      if (mode === 'cards') {
+        cardsView.classList.remove('hidden');
+        tableView.classList.add('hidden');
+        btnCards.classList.add('bg-white', 'text-deepnavy', 'shadow-sm');
+        btnCards.classList.remove('text-slate-600');
+        btnTable.classList.remove('bg-white', 'text-deepnavy', 'shadow-sm');
+        btnTable.classList.add('text-slate-600');
+      } else {
+        cardsView.classList.add('hidden');
+        tableView.classList.remove('hidden');
+        btnTable.classList.add('bg-white', 'text-deepnavy', 'shadow-sm');
+        btnTable.classList.remove('text-slate-600');
+        btnCards.classList.remove('bg-white', 'text-deepnavy', 'shadow-sm');
+        btnCards.classList.add('text-slate-600');
+      }
+    }
+
+    // 6. 一鍵複製完整講稿 (相容 iFrame 環境的 execCommand 備援)
+    function copyFullScript() {
+      const scriptText = storyboardData.map(s => s.voiceover.replace(/^「|」$/g, '')).join('\n\n');
+      
+      const textArea = document.createElement('textarea');
+      textArea.value = scriptText;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        const toast = document.getElementById('toast-message');
+        toast.classList.remove('hidden');
+        toast.classList.add('flex');
+        setTimeout(() => {
+          toast.classList.add('hidden');
+          toast.classList.remove('flex');
+        }, 4000);
+      } catch (err) {
+        console.error('複製失敗:', err);
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+
+    // 7. 配音練習計時器 (00:00 ~ 60秒目標提醒)
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+
+    function formatTime(sec) {
+      const mins = Math.floor(sec / 60).toString().padStart(2, '0');
+      const secs = (sec % 60).toString().padStart(2, '0');
+      return `${mins}:${secs}`;
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('btn-timer-toggle');
+      const display = document.getElementById('timer-display');
+
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.textContent = '繼續';
+        btn.classList.replace('bg-amber-600', 'bg-laketeal-600');
+      } else {
+        btn.textContent = '暫停';
+        btn.classList.replace('bg-laketeal-600', 'bg-amber-600');
+        timerInterval = setInterval(() => {
+          elapsedSeconds++;
+          display.textContent = formatTime(elapsedSeconds);
+          // 超過 60 秒轉為橘紅色提醒
+          if (elapsedSeconds > 60) {
+            display.classList.remove('text-laketeal-700');
+            display.classList.add('text-warmorange-600');
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      elapsedSeconds = 0;
+      const display = document.getElementById('timer-display');
+      const btn = document.getElementById('btn-timer-toggle');
+      display.textContent = '00:00';
+      display.classList.remove('text-warmorange-600');
+      display.classList.add('text-laketeal-700');
+      btn.textContent = '開始';
+      btn.classList.remove('bg-amber-600');
+      btn.classList.add('bg-laketeal-600');
+    }
+
+    // 頁面載入初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      renderStoryboard();
+      updateProgress();
+    });
+  </script>
+</body>
+</html>
